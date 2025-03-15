@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content= "width=device-width, initial-scale=1.0">
+  <meta name="author" content="Copyright © 2020-2025 Denis Cote ThinknSpeak ™">
+
+  <title>TrackView III</title>
+  <style>
+    *, ::before, ::after {
+      box-sizing: border-box;
+    }
+    html, body, body {
+      padding:0;
+      margin: 0px;
+      height: 100%;
+      width:  100%;
+      background-color:rgb(32, 35, 37);
+    }
+    html, body, .MainContainer {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      height: 100%;
+    }
+    #WaitingBackground {
+    	position: absolute;
+    	top: 0;
+    	left: 0;
+    	width: 100vw;
+    	height: 100vh;
+      color:white;
+      font-size: min(7vh,7vw);
+      text-align: center;
+      align-content: center;
+    	background-color: #00F8;
+    	z-index: 2147483647;
+    }
+    .MainContainer {
+      display: flex;
+      height: 100%;
+      flex-direction: column;
+      font-size: min(1.5vh, 1.0vw);
+      color: #ccc;
+      background: rgb(32, 35, 37);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    .MainPanel {
+      display: flex;
+      flex: 1;
+    }
+    .MainPanel .LeftPanel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      border-right: 1px solid rgb(10, 10, 10);
+    }
+    .MainPanel .RightPanel {
+      width: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: min(5.5vh, 5.5vw);
+      background-color: rgb(16, 17, 19);
+    }
+    video {
+      width: 100%;
+      max-height: 70vh;
+    }
+    #Waveform {
+      display: flex;
+      position: relative;
+      overflow: hidden;
+      width:100%;
+      height: 15vh;
+      bottom:0;
+      background-color: rgb(28, 32, 34);
+      border-top: 1px solid rgb(10, 10, 10);
+    }
+    #WaveCursor {
+    	z-index: 10;
+    	opacity: .25;
+    	user-select: none;
+    	pointer-events: none;
+    	background-color: #fff;
+    	width: max(0.1vh, 0.1VW);
+    	height: 100%;
+    	position: absolute;
+    	top: 0;
+    	bottom: 0;
+    	left: 0;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: min(5.5vh, 5.5vw);
+      border-bottom: 1px solid rgb(10, 10, 10);
+      background-color: rgb(68, 87, 96);
+    }
+    .header .left {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      padding-left: 0px;
+    }
+    .header .right {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+    .item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 0 min(3vh, 1vw);
+      cursor: pointer;
+      overflow: hidden;
+      color: #f1fa8c;
+      border-left: 1px solid rgb(17, 21, 24);
+      background-color: rgb(39, 41, 54);
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .Bold{
+      font-weight: bolder;
+      font-size: min(2vh, 1.25vw);
+    }
+    .header .right .item:hover {
+      color: #fff;
+      background-color: rgb(66, 82, 95);
+    }
+    .header .right .item .open {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+    }
+    .SurInput {
+      position:absolute;
+      left: min(12vh,11vw);
+      width: min(45%, 39vw);
+      height: min(4.0vh, 4.0vw);
+      padding: min(1vh, 1vw);
+      color: rgb(220, 220, 221);
+      font-size: min(2.0vh, 2.0vw);
+      font-weight: bolder;
+      cursor: pointer;
+      background-color: rgb(42, 56, 62);
+      overflow: hidden;
+      	/* display: none; */
+    }
+    input[type="file"] {
+      padding: min(1vh, 1vw);
+      width:50vw;
+      /* color: rgb(220, 220, 221); */
+      color: transparent;
+      font-size: min(2vh, 1.5vw);
+      cursor: pointer;
+      border-bottom: 1px solid rgb(10, 10, 10);
+      border-radius: 5px;
+      background-color: rgb(42, 56, 62);
+    }
+  </style>
+</head>
+<body>
+  <div id="WaitingBackground">
+    <p id="WaitingText"></p> 
+  </div> 
+  <div class="MainContainer">
+    <header class="header">
+      <div class="left">
+        <input type="file" id="VideoInput" accept="video/*">
+        <div id="CurrentlyPlaying" class="SurInput"></div>
+
+        <a id="SampleState" class="item Bold" onclick="ToggleEnableSample();" style="color: #2e0101;"
+          title="Show the current sample play status. 
+  Clicking on it will Enable or disable it if the Zoom allow. 
+  You cannot force it on. You have to change the 'D' value for that.
+  You can increase/decrease the value via the 'D' button."
+        >
+          Sample
+        </a>
+        <a id="DrawState" class="item Bold" onclick="TogglePauseDraw();" style="color: #2e0101;background-color:chartreuse;"
+          title="Show the Draw status. 
+  You can also change that value by pressing the 'Pause|Break' key"
+        >
+          Draw ON
+        </a>
+        <a id="SampleMaxSize" class="item Bold" onmousedown="SetSampleMax(event);" style="color: #2e0101;background-color:chartreuse;"
+          title="Play sample maximum duration time zoom. 
+  Press [Ctrl] for lager step
+  You can also change that value by pressing '/|*' keys"
+        >
+          -  D:30s  +
+        </a>
+        <a id="SampleSize" class="item Bold" onmousedown="SetSampleSize(event);" style="color: #2e0101;background-color:chartreuse;;"
+          title="Sample time in millisecond. 
+  Press [Ctrl] for lager step
+  You can also change that value by pressing '←|→' keys"
+        >
+          -  S:200  +
+        </a>
+        <a id="WaveSize" class="item Bold" onmousedown="SetWaveScale(event);" style="color: #2e0101;background-color:chartreuse;"
+          title="Change the wave scale factor. 
+  Press [Ctrl] for lager step
+  You can also change that value by pressing Page 'Up|Down' keys"
+        >
+          -  W:0.8  +
+        </a>
+      </div>
+      <div class="log"></div>
+      <div class="right">
+        <a class="item" onclick="window.open('https://github.com/DCWizard/TrackView')">
+          Github
+        </a>
+        <a class="item" onclick="window.open('https://thinknspeak.net/donate')">
+          Donate
+        </a>
+      </div>
+    </header>
+    <section class="MainPanel">
+      <div id="LeftPanel" class="LeftPanel">
+        <div style="height: 44vh;max-height: 44vh;margin-left:min(5vh,5vw);overflow: auto;">
+<!-- 
+          <header class="header" style="display: inline-flex;">
+            <a id="TrackChoice" class="item Bold" onmousedown="ChangeTrackNo(event);" style="color: #2e0101;background-color:chartreuse;"
+              title="Select wich track you want in the TrackView. (default: 0)
+  You can also change that value by pressing 'Num keys' keys"
+            >
+              -  T:0  +
+            </a>
+            <a id="ZoomFactor" class="item Bold" onmousedown="ChangeZoom(event);" style="color: #2e0101;background-color:chartreuse;"
+              title="Show and modify current TrackView factor. (default: 10)
+  Press [Ctrl] for lager step
+  You can also change that value by pressing '↑|↓ keys 
+  As well as using the mouse wheel over the TrackView + [Shift]"
+            >
+              -  Z:10  +
+            </a>
+
+          </header>
+ -->
+          <div id="ShowHelp" >
+            <p>
+              Trackview Press ? to show/hide the Help view.<br>
+              &ensp;&ensp;Mouse wheel: Move back and forth<br>
+              &ensp;&ensp;+[Alt] Move faster<br>
+              &ensp;&ensp;+[Shift] Zoom in/out <br>
+              &ensp;&ensp;+[Shift]+[Ctrl] Zoom faster <br>
+              Keys: 
+            </p>
+            <ul>
+              <li> [ArrowUp] Zoom in
+                <ul>
+                  <li>+ [Shift] Zoom to max sample</li>
+                  <li>+ [Alt] Zoom faster</li>
+                </ul>
+              </li>
+              <li> [ArrowDown] Zoom out
+                <ul>
+                  <li>+ [Shift] Zoom normal</li>
+                  <li>+ [Alt]   Zoom faster</li>
+                </ul>
+              </li>
+              <li> [Home] Move towards begining
+                <ul>
+                  <li>+ [Ctrl] Move to 0</li>
+                </ul>
+              </li>
+              <li> [End] Move towards end
+                <ul>
+                  <li>+ [Ctrl] Move to End</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <p style="font-weight:bolder;"> Drop file or link here</p>
+          <img src="file:///D:/TEACH_C/DCRes/Drophere 2.webp" style="width:100%;height:75%;">
+        </div>
+        <canvas id='Spectrum' width="800" height="350" style="width:100%;flex:content;padding:min(3vh, 3vw);padding-bottom: 1vh;height:35vh;max-height:35vh;"></canvas>
+      </div>
+      <div class="RightPanel">
+        <video id="MainAudio" src="https://wfplayer.js.org/sample.mp4" controls=""></video>
+      </div>
+    </section>
+    <footer id="Waveform">
+      <div>
+
+          <header class="header" style="display: block;width: 8vw;height: 100%;">
+            <a id="TrackChoice" class="item Bold" onmousedown="ChangeTrackNo(event);" style="margin: 0.5vh 0.5vw;height: 4vh;color: #2e0101;background-color:chartreuse;"
+              title="Select wich track you want in the TrackView. (default: 0)
+  You can also change that value by pressing 'Num keys' keys"
+            >
+              -  T:0  +
+            </a>
+            <a id="ZoomFactor" class="item Bold" onmousedown="ChangeZoom(event);" style="margin: 0.5vh 0.5vw;height: 4vh;color: #2e0101;background-color:chartreuse;"
+              title="Show and modify current TrackView factor. (default: 10)
+  Press [Ctrl] for lager step
+  You can also change that value by pressing '↑|↓ keys 
+  As well as using the mouse wheel over the TrackView + [Shift]"
+            >
+              -  Z:10  +
+            </a>
+
+          </header>
+       
+      </div>
+      <canvas id="TrackView" width="1738" height="199" style="width: 91vw;"></canvas>
+      <div id="WaveCursor" style="left: 1752px; display: none;"></div>
+
+    </footer>
+  </div>
+  <script>
+  var TheVideoInput = document.getElementById('VideoInput');
+  TheVideoInput.addEventListener('change', HandleFileSelect);
+  setTimeout(function (){
+    WaitingText.innerHTML = "Click to initialize<br>Audio Context";
+  }, 125);
+  var ThisAudio           = document.getElementById('MainAudio');
+  var TheFetchController;
+  var TheReader;
+  
+  function HandleFileSelect(ThisEvent) {
+    let ThisFile = ThisEvent.target.files[0];
+    HandleBrowserFile(ThisFile);
+  }
+  function HandleBrowserFile(ThisFile){
+    if(ThisFile){
+      if((!ThisAudio.paused)){
+        ThisAudio.pause();
+      }
+      WaitingText.innerHTML = "Processing file...<br>Press Esc to cancel.";
+      WaitingBackground.style.display = "";
+      try{
+        AnalyseAudioFile(ThisFile, function (ThisAudioContext, ThisAudioBuffer){   
+          TheAudioBuffer     = ThisAudioBuffer;  
+          // console.log("TheAudioBuffer", TheAudioBuffer);
+          TrackAvailable    = TheAudioBuffer.numberOfChannels;
+          if(CurrentTrackNo >= TrackAvailable){
+            CurrentTrackNo  = TrackAvailable - 1;
+          }
+          ThisChannelData   = TheAudioBuffer.getChannelData(CurrentTrackNo);
+          SetTrackNo(CurrentTrackNo);
+
+          // console.log("ThisChannelData", ThisChannelData);        
+          var ThatAudio     = URL.createObjectURL(ThisFile);
+          var ThisAudio     = document.getElementById('MainAudio'); // document.querySelector("video"); 
+          ThisAudio.src     = ThatAudio;
+          PlayFromAudio ();
+          SetVideoInputTitle  (ThisFile.name);
+        });
+      }
+      catch(ThisErr){
+        alert("Failed to open file. \n\n" + ThisErr.message);
+        WaitingBackground.style.display = "none";
+      }
+    }
+  }
+  var ThisAudioContext;
+  var animationFrameID;
+
+  var SamplePlaying;
+  var SpectrumStarted;
+  var TheFrequencyData;
+  var TheAnalyser;
+  var TheAudioSrc;
+
+  var TheArrayBuffer;
+  var TheAudioBuffer;
+  var ThisChannelData;
+
+  var ThisCanvas        = document.getElementById('TrackView'),
+    ctx                 = ThisCanvas.getContext('2d'),
+    width               = ThisCanvas.width,
+    height              = ThisCanvas.height - 2;
+  var backgroundColor   = 'rgb(28, 32, 34)',
+      paddingColor      = 'rgba(255, 255, 255, 0.05)',
+      gridColor         = 'rgba(255, 255, 255, 0.05)',
+      rulerColor        = 'rgba(255, 255, 255, 0.75)',
+      progressColor     = 'rgba(255, 255, 255, 0.5)',
+      waveColor         = 'rgba(255, 255, 255, 0.1)',
+      waveBorderColor   = 'rgba(255, 255, 255, 0.1)',
+      scrollbarColor    = "rgba(255, 255, 255, 0.25)",
+      cursorColor       = '#ff0000';
+
+  var pixelRatio        = 1; // ALWAYS ONE IN VH/VW ; Math.ceil(window.devicePixelRatio), // = 1 default
+      grid              = true;
+      scrollable        = true, // SHOULD ALWAYS BE TRUE TRUST ME IT'S BETTER
+      ruler             = true,
+      rulerAtTop        = true,
+      progress          = true,
+      wave              = true,
+      waveBorder        = false,
+      cursor            = true;
+      
+  var TrackPadding      = 0, 
+      duration          = 10,
+      waveScale         = 0.8,
+      waveSize          = 1,
+      waveBorderWidth   = 1;
+
+  var TrackAvailable    = (TrackAvailable?TrackAvailable:1);
+  var CurrentTrackNo    = (CurrentTrackNo?CurrentTrackNo:0);
+  var EnableSamplePlay  = (IsNotNull(EnableSamplePlay)?EnableSamplePlay:true);
+  var SampleLength      = (SampleLength?SampleLength:200);
+  var PauseDraw         ;
+  var MaxSampleDuration = (MaxSampleDuration?MaxSampleDuration:30);
+  var HalfDuration      ;
+  var gridNum           ;
+  var gridGap           ;
+  var density           ;
+  var CenterPlot        ;
+  var PixRatio          ;
+  var GridArea          ;
+  var GridScale         ;
+  var CursorPos         ;
+  var MiddleHeight      ;
+  var GridSpace         ;
+  var WaveWidth         ;
+  var FullBarDuration   ;
+  var ThisTotalWidth    ;
+  var ScrollbarWidth    ;
+  var ScrollbarHeight   ;
+  var ScrollbarLeft     ;
+  var ScrollbarTop      ;
+  var beginTime         ;
+
+      // BASED ON THE VIDEO:
+  var TheCurrentTime    = 0,
+      TotalDuration     = 0,
+      sampleRate        = 0;
+
+  // THOSE NEVER CHANGE NO NEED TO CALCULATE DURING THE DRAW
+  // (pixelRatio) ALWAYS REMAIN 1 IN CANVAS VH/VW
+  let fontSize          = 12;
+  ctx.font              = `${fontSize * pixelRatio}px Arial`;
+  let fontHeight        = 16;
+  let fontTop           = 30;
+  let HalfFontHeight    = (fontHeight / 2) * pixelRatio;
+  let FullFontHeight    = (fontHeight) * pixelRatio;
+  let RelativeTextX     = fontSize * pixelRatio * 2;
+  let RelativeTextY     = fontTop * pixelRatio;
+
+  var ScrollX;
+  var IsGrabed          = false;
+  var LastPageX;
+  var LastCurrentTime;
+
+  var FPS30             = (1.0 / 30.0);
+  var FrameCounter      = 0.0;
+  var FrameDropped      = 0.0;
+  var LastTimeStamp     = new Date();
+
+  var Int               = ThisValue => {return (isNaN(ThisValue))?0:ThisValue | 0;}
+
+  function CalcBeginTime  (ThisTime  = TheCurrentTime) {return (scrollable ? (ThisTime - HalfDuration) : (Math.floor(ThisTime / duration) * duration));}
+  function CalcScrollX    (ThisTime  = TheCurrentTime) {return (scrollable ? (CursorPos)               : (CenterPlot + (ThisTime - beginTime) * GridScale));}
+  function CalcCursorTime (ThisPosX) { 
+    let ThePadding      = (CenterPlot / pixelRatio);
+    let ThePixRatio     = (PixRatio * 10);
+    // console.log("ThePadding",  ThePadding);
+    // console.log("ThePixRatio", ThePixRatio);
+    let TheOutput       = (ThisPosX - ThePadding) / ThePixRatio;
+    return TheOutput    + beginTime;
+  }   
+  function GetCanvasPos   (ThisEvent){
+    let WinXRatio       = (ThisCanvas.width        / ThisCanvas.scrollWidth);
+    let WinYRatio       = (ThisCanvas.height       / ThisCanvas.scrollHeight);
+
+    let ThisPtX         = Int(ThisEvent.offsetX * WinXRatio);
+    let ThisPtY         = Int(ThisEvent.offsetY * WinYRatio);
+
+    // console.info("MouseClick:", "X:",(ThisPtX), "Y:", (ThisPtY));
+    let ThisMarker      = {"X":(ThisPtX), "Y":(ThisPtY) };
+    return ThisMarker;
+  }
+  function ProcessCanvasZoom (ThisZoom){
+    ThisZoom            = Math.abs(Int(ThisZoom));
+    let FullViewDuration= (scrollable?(TotalDuration * 2):TotalDuration);
+    if((ThisZoom       <= 0)){
+      ThisZoom          = 1;
+    }
+    if((ThisZoom     >= FullViewDuration)){
+      ThisZoom        = FullViewDuration;
+    }
+    // MAX OUT AT 2 MIN. 1 ON BOTH SIDE
+    if(ThisZoom       > 120){
+      ThisZoom        = 120;
+    }
+    duration          = ThisZoom;
+    if((EnableSamplePlay)
+    && (duration                 <= MaxSampleDuration)){
+      SampleState.style.backgroundColor = "chartreuse";
+    } else {
+      SampleState.style.backgroundColor = "";
+    }
+    HalfDuration      = duration / 2;
+    gridNum           = duration * 10 + TrackPadding * 2;
+    gridGap           = width / gridNum; // ​width: 1755 ​gridGap: 15.954545454545455
+    density           = GetDensity(); // = 1 default
+    CenterPlot        = (TrackPadding * gridGap);
+    PixRatio          = (gridGap / pixelRatio);
+    GridArea          = (height / gridGap);
+    GridScale         = (gridGap * 10);
+    GridSpace         = (gridGap * TrackPadding);
+    WaveWidth         = (width - GridSpace * 2);
+
+    FullBarDuration   = (scrollable?(duration / 2):duration);
+    ThisTotalWidth    = (FullBarDuration / TotalDuration);
+    ScrollbarWidth    = (width * ThisTotalWidth);
+    ScrollbarHeight   = (5); // ALWAYS 1  CANVAS VH:VW  * pixelRatio
+    ScrollbarLeft     = (scrollable?0:(TheCurrentTime / TotalDuration) * (width - ScrollbarWidth));
+    ScrollbarTop      = (rulerAtTop ? (height - ScrollbarHeight) : 0);
+
+    beginTime         = CalcBeginTime ();
+    return true;
+  }
+
+  function ReadFileAudioData        (ThisFile, ThisCallBack){
+    TheReader                 = new FileReader();
+    
+    function OnDataLoaded (ThisEvent){
+      TheArrayBuffer          = ThisEvent.target.result; // TheReader.result;
+      // console.log("TheArrayBuffer", TheArrayBuffer);
+      DelReaderEvents();
+
+      let ThisAudioContext    = new (window.AudioContext || window.webkitAudioContext || window.mozAudioContext)();
+
+      if(ThisAudioContext){
+        ThisAudioContext.decodeAudioData(TheArrayBuffer, function (ThisDataBuffer){
+          if((ThisCallBack)){ 
+            ThisCallBack(ThisAudioContext, ThisDataBuffer); 
+          }
+        }, function (ThisErr){
+          alert('Error ReadFileAudioData decoding audio: \n\n' + ThisErr.message);
+          WaitingBackground.style.display = "none";
+        });
+        return true;
+      } else {
+        alert('Error: No Audio Context for ReadFileAudioData ');
+        WaitingBackground.style.display = "none";
+      }
+    }
+    function OnDataAborted (ThisEvent){
+      DelReaderEvents();
+      WaitingBackground.style.display = "none";
+    }
+    function OnDataError  (ThisEvent){
+      DelReaderEvents();
+      alert('Error: Fail to Read File AudioData');
+      WaitingBackground.style.display = "none";
+    }
+    function AddReaderEvents(){
+      TheReader.addEventListener('load',  OnDataLoaded);
+      TheReader.addEventListener('abort', OnDataAborted);
+      TheReader.addEventListener('error', OnDataError);
+    }
+    function DelReaderEvents(){
+      TheReader.removeEventListener('load',  OnDataLoaded);
+      TheReader.removeEventListener('abort', OnDataAborted);
+      TheReader.removeEventListener('error', OnDataError);
+      TheReader = null;
+    }
+    AddReaderEvents();
+    TheReader.readAsArrayBuffer(ThisFile);
+  }
+  function AnalyseAudioFile         (ThisFile, ThisCallBack){
+    ReadFileAudioData (ThisFile, function (ThisAudioContext, ThisAudioBuffer){
+      // console.log("ThisAudioBuffer", ThisAudioBuffer);
+
+      if((ThisCallBack)){ 
+        ThisCallBack(ThisAudioContext, ThisAudioBuffer); 
+      }
+    });
+  }
+  function GetHttpObjectArrayBuffer (ThisUrl,  ThisCallBack){
+    TheFetchController  = new AbortController();
+    let signal          = (TheFetchController?TheFetchController.signal:null); 
+    fetch(ThisUrl, {signal}).then(ThisRes =>  {
+        return ThisRes.arrayBuffer();
+      }
+    ).then(ThisArrayBuffer => {
+      if((ThisCallBack)){
+        ThisCallBack(ThisArrayBuffer);
+      }    
+      TheFetchController    = null;
+    }).catch((ThisErr) => {
+      TheFetchController    = null;
+      if(signal.aborted){
+      } else {
+        alert("Fail to process URL.\n\n" + ThisErr.message);
+      }
+      WaitingBackground.style.display = "none";
+    });
+    ;
+  }
+  function GetHttpObjectUrl(ThisUrl, ThisCallBack){
+    TheFetchController  = new AbortController();
+    let signal          = (TheFetchController?TheFetchController.signal:null); 
+    fetch(ThisUrl, {signal}).then(ThisRes => ThisRes.blob()).then(ThisBlob => {
+      // console.log("ThisBlob", ThisBlob);
+      var ThisBlobURL = URL.createObjectURL(ThisBlob);
+      if((ThisCallBack)){
+        ThisCallBack(ThisBlobURL);
+      }    
+      TheFetchController    = null;
+    }).catch((ThisErr) => {
+      TheFetchController    = null;
+      if(signal.aborted){
+      } else {
+        alert("Fail to process Object URL.\n\n" + ThisErr.message);
+      }
+      WaitingBackground.style.display = "none";
+    });
+  }  
+  function ToggleShowHelp           (){
+    let ThisShowHelp              = (ShowHelp.style.display == "none")?"":"none";
+    ShowHelp.style.display        = ThisShowHelp;
+  }
+  function TogglePauseDraw          (){
+    PauseDraw             = PauseDraw?false:true;
+    if(PauseDraw){
+      DrawState.style.color           = "";
+      DrawState.style.backgroundColor = "";
+      DrawState.innerHTML             ="Draw OFF";
+    } else {
+      DrawState.style.color           = "#2e0101";
+      DrawState.style.backgroundColor = "chartreuse";
+      DrawState.innerHTML             ="Draw ON";
+    }
+  }
+  function SetSampleMax             (ThisEvent){
+    ThisEvent.preventDefault(); 
+    ThisEvent.stopPropagation();
+    ThisEvent.stopImmediatePropagation();
+    // console.log(ThisEvent);
+    let ThisDelta         = 1; 
+    let ThisLength        = MaxSampleDuration; 
+    let ThisX             = ThisEvent.offsetX;
+    let ThisY             = ThisEvent.offsetY;
+    let ThisW             = ThisEvent.currentTarget.offsetWidth;
+    let ThisMiddleButton  = ThisW / 2;
+    if(IsCtrlKeyDown(ThisEvent)){
+       ThisDelta          = 10;
+    }
+    if(ThisX              < ThisMiddleButton){
+      ThisLength         -= ThisDelta; 
+    } else {
+      ThisLength         += ThisDelta; 
+    }
+    SetSampleMaxLength      (ThisLength);
+  }
+  function SetSampleMaxLength       (ThisLength){
+    if(ThisLength         > 99){
+      ThisLength          = 99;
+    }
+    if(ThisLength         < 10){
+      ThisLength          = 10;
+    }
+    MaxSampleDuration       = ThisLength;
+    SampleMaxSize.innerText = "-  D:" + MaxSampleDuration + "s  +";
+    if((EnableSamplePlay)
+    && (duration                 <= MaxSampleDuration)){
+      SampleState.style.backgroundColor = "chartreuse";
+    } else {
+      SampleState.style.backgroundColor = "";
+    }
+  }
+  function SetSampleSize            (ThisEvent){
+    ThisEvent.preventDefault(); 
+    ThisEvent.stopPropagation();
+    ThisEvent.stopImmediatePropagation();
+    // console.log(ThisEvent);
+    let ThisDelta         = 10; 
+    let ThisLength        = SampleLength; 
+    let ThisX             = ThisEvent.offsetX;
+    let ThisY             = ThisEvent.offsetY;
+    let ThisW             = ThisEvent.currentTarget.offsetWidth;
+    let ThisMiddleButton  = ThisW / 2;
+    if(IsCtrlKeyDown(ThisEvent)){
+       ThisDelta          = 100;
+    }
+    if(ThisX              < ThisMiddleButton){
+      ThisLength         -= ThisDelta; 
+    } else {
+      ThisLength         += ThisDelta; 
+    }
+    SetSampleSizeLength      (ThisLength);
+  }
+  function SetSampleSizeLength      (ThisLength){
+    if(ThisLength         > 1000){
+      ThisLength          = 1000;
+    }
+    if(ThisLength         < 0){
+      ThisLength          = 0;
+    }
+    SampleLength          = ThisLength;
+    SampleSize.innerText  = "-  S:" + SampleLength + "  +";
+  }
+  
+  function SetWaveScale             (ThisEvent){
+    ThisEvent.preventDefault(); 
+    ThisEvent.stopPropagation();
+    ThisEvent.stopImmediatePropagation();
+    // console.log(ThisEvent);
+    let ThisDelta         = 0.1; 
+    let ThisLength        = waveScale; 
+    let ThisX             = ThisEvent.offsetX;
+    let ThisY             = ThisEvent.offsetY;
+    let ThisW             = ThisEvent.currentTarget.offsetWidth;
+    let ThisMiddleButton  = ThisW / 2;
+    if(IsCtrlKeyDown(ThisEvent)){
+       ThisDelta          = 0.5;
+    }
+    if(ThisX              < ThisMiddleButton){
+      ThisLength         -= ThisDelta; 
+    } else {
+      ThisLength         += ThisDelta; 
+    }
+    SetWaveScaleLength      (ThisLength);
+  }
+  function SetWaveScaleLength       (ThisLength){
+    ThisLength            = Number(ThisLength);
+    if(ThisLength         > 2.0){
+      ThisLength          = 2.0;
+    }
+    if(ThisLength         < 0.0){
+      ThisLength          = 0.1;
+    }
+    waveScale             = Number(ThisLength.toFixed(1));
+    DrawNow();
+    WaveSize.innerText    = "-  W:" + waveScale + "  +";
+  }
+  function ChangeTrackNo            (ThisEvent){
+    ThisEvent.preventDefault(); 
+    ThisEvent.stopPropagation();
+    ThisEvent.stopImmediatePropagation();
+    // console.log(ThisEvent);
+    let ThisDelta         = 1; 
+    let ThisValue         = CurrentTrackNo; 
+    let ThisX             = ThisEvent.offsetX;
+    let ThisY             = ThisEvent.offsetY;
+    let ThisW             = ThisEvent.currentTarget.offsetWidth;
+    let ThisMiddleButton  = ThisW / 2;
+    if(ThisX              < ThisMiddleButton){
+      ThisValue          -= ThisDelta; 
+    } else {
+      ThisValue          += ThisDelta; 
+    }
+    SetTrackNo              (ThisValue);
+  }
+  function SetTrackNo               (ThisValue){
+    ThisValue             = Number(ThisValue);
+
+    if(ThisValue         >= TrackAvailable){
+      ThisValue           = TrackAvailable - 1;
+    }
+    if(ThisValue          < 0){
+      ThisValue           = 0;
+    }
+    if(ThisValue          != CurrentTrackNo){
+      CurrentTrackNo       = ThisValue;
+      ThisChannelData      = TheAudioBuffer.getChannelData(CurrentTrackNo);
+      DrawNow();
+      TrackChoice.innerText   = "-  T:" + CurrentTrackNo + "  +";
+    }
+    TrackChoice.title=`Select wich track you want in the TrackView. (default: 0)\n  Track Available (${TrackAvailable})\n  You can also change that value by pressing 'Num keys' keys`;
+  }
+
+  function ToggleEnableSample       (ThisEvent){
+    EnableSamplePlay              = EnableSamplePlay?false:true;
+    if((EnableSamplePlay)
+    && (duration                 <= MaxSampleDuration)){
+      SampleState.style.backgroundColor = "chartreuse";
+    } else {
+      SampleState.style.backgroundColor = "";
+    }
+  }
+
+  function ChangeZoom               (ThisEvent){
+    ThisEvent.preventDefault(); 
+    ThisEvent.stopPropagation();
+    ThisEvent.stopImmediatePropagation();
+    // console.log(ThisEvent);
+    let ThisDelta         = 1; 
+    let ThisValue         = duration; 
+    let ThisX             = ThisEvent.offsetX;
+    let ThisY             = ThisEvent.offsetY;
+    let ThisW             = ThisEvent.currentTarget.offsetWidth;
+    let ThisMiddleButton  = ThisW / 2;
+    if(IsCtrlKeyDown(ThisEvent)){
+       ThisDelta          = 10;
+    }
+    if(ThisX              < ThisMiddleButton){
+      ThisValue          -= ThisDelta; 
+    } else {
+      ThisValue          += ThisDelta; 
+    }
+    SetZoomFactor           (ThisValue);
+  }
+  function SetZoomFactor            (ThisValue){
+    ThisValue             = Number(ThisValue);
+    let FullViewDuration= (scrollable?(TotalDuration * 2):TotalDuration);
+
+    if(ThisValue         >= FullViewDuration){
+      ThisValue           = FullViewDuration;
+    }
+    if(ThisValue          < 1){
+      ThisValue           = 1;
+    }
+    if(ThisValue         != duration){
+      duration            = ThisValue;
+      if(ProcessCanvasZoom (ThisValue)){
+        DrawNow ();
+      }
+      ZoomFactor.innerText= "-  Z:" + duration + "  +";
+    }
+  }
+
+  
+  
+  AcceptDroppedObject               (LeftPanel, function(ThisEvent, ThisFile, ThisType){
+      if((ThisEvent.type == "dragenter")){
+        return;
+      } else 
+      if((ThisEvent.type == "dragover")){
+        return;
+      } else 
+      if((ThisEvent.type == "dragleave")){
+        return;
+      } else 
+      if((ThisEvent.type == "drop")){
+        console.log("drop", ThisEvent, ThisFile, ThisType);
+
+        switch(ThisType){
+        case "text/plain":
+          let ThisText      = ThisFile;
+          console.log ("Drop Text:", ThisText);
+          if("http"            == ThisText.substr(0, 4)){
+            ThisAudio.src       = ThisText;
+            WaitingText.innerHTML = "Processing file...<br>Press Esc to cancel.";
+            WaitingBackground.style.display = "";
+            PlayFromAudio ();
+          } else {
+            alert("Object Dropped Not supported. \nThis Text Recieved: " + ThisText );
+          }
+          return;
+        case "file":
+          let ThisFileName = ThisFile.name;
+          console.log ("Drop File:", ThisFileName);
+          HandleBrowserFile(ThisFile);
+          break;
+        default:
+          alert("Drop type usnuported in this task.");
+          return;
+        }
+        return;
+      }
+      // console.log("AcceptDroppedObject", ThisEvent, ThisFile, ThisType);
+  }, 1 );
+
+  function AcceptDroppedObject      (ThisObj, ThisCallBack, MaxCount=-1 ){
+    let MaxDroppedCount = MaxCount;
+    function OnAllowDrop(ThisEvent){
+      ThisEvent.preventDefault();
+      if((ThisCallBack)){ ThisCallBack(ThisEvent); }
+    }
+    async function OnDropObject(ThisEvent) {
+      ThisEvent.preventDefault();
+
+      if(!(ThisEvent.dataTransfer)){
+        console.log("DROP NULL", ThisEvent, ThisEvent.dataTransfer);
+        return;
+      }
+      let ThisText = ThisEvent.dataTransfer.getData("text");
+      if(IsNotNullString(ThisText)){
+        // console.log("DROP TEXT", ThisEvent, ThisText);
+        if((ThisCallBack)){ 
+          let ThisResp = ThisCallBack(ThisEvent, ThisText, "text/plain"); 
+          if(ThisResp == "ReInstall"){
+            InstallEvents();
+          }
+        }
+      } else 
+      if(ThisEvent.dataTransfer.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        let TheseItems              = ThisEvent.dataTransfer.items;
+        for(let Indx = 0; Indx      < TheseItems.length; Indx++) {
+          let ThisItem              = TheseItems[Indx];
+          if(ThisItem.kind        === 'file'){
+            let ThisFile            = ThisItem.getAsFile();
+            ThisFile["FileSys"]     = ThisItem.webkitGetAsEntry();
+            ThisFile.isDirectory    = (ThisFile["FileSys"].isDirectory);
+            ThisFile.isFile         = (ThisFile["FileSys"].isFile);
+            if(ThisFile.fullPath){
+              ThisFile.RelativePath = TrimSlash(ThisFile.fullPath);
+            } else 
+            if(ThisFile.webkitRelativePath){
+              ThisFile.RelativePath = TrimSlash(ThisFile.webkitRelativePath);
+            } 
+            let ThisBlobHtml        = URL.createObjectURL(ThisFile);
+            ThisFile.AsBlob         = ThisBlobHtml;
+
+            // console.log(`… file[${Indx}].name = ${ThisFile.name}`);
+            if((ThisCallBack)){ 
+              let ThisResp = ThisCallBack(ThisEvent, ThisFile, ((ThisFile.isDirectory)?"directory":"file")); 
+              if(ThisResp == "ReInstall"){
+                InstallEvents();
+              }
+            }
+            if((MaxDroppedCount != -1)
+            && (MaxDroppedCount <= Indx+1)
+            ){
+              break;
+            }
+          }
+        }
+      }
+    }
+    function InstallEvents (ThisObj){
+      ThisObj.addEventListener('dragenter', event => OnAllowDrop(event) );
+      ThisObj.addEventListener('dragover',  event => OnAllowDrop(event) );
+      ThisObj.addEventListener('dragleave', event => OnAllowDrop(event) );
+      ThisObj.addEventListener('drop',      event => OnDropObject(event) );
+    } InstallEvents(ThisObj);
+    return {
+      InstallEvents
+    }
+  }
+  function SetVideoInputTitle       (ThisVideoSrc){
+    // change the format of 
+    let ThisVideoTitle             = ThisVideoSrc;
+    // let TheLastIndex               = ThisVideoSrc.lastIndexOf("/");
+    // if(TheLastIndex                < 0 ){
+    //   TheLastIndex                 = ThisVideoSrc.lastIndexOf("\\");
+    // }
+    // if(TheLastIndex                > 0){
+    //   ThisVideoTitle               = ThisVideoTitle.substr(TheLastIndex + 1); 
+    // }
+    CurrentlyPlaying.innerText     = ThisVideoTitle;
+  }
+  
+  async function Sleep              (ThisLong){
+    return new Promise(resolve => setTimeout(resolve, ThisLong));
+  }
+  function DoNothing                (){}
+  function GetDensity               () {
+    // MADED IT CLEAN AND EASY NOW THE FUNCTION IS MINE
+    if(gridGap === 0){ return 1;}
+    let TextWidth       = ctx.measureText('99:99:99').width;
+    function CalcFloorRate (ThisSize){
+      let ThisRate      = ((gridGap * ThisSize) / (TextWidth * 1.5));
+      if(ThisRate       > 1){
+        return Math.floor(ThisSize / 10);
+      }
+      return CalcFloorRate (ThisSize + 10);
+    }
+    return CalcFloorRate (10);
+  }
+
+  function secondToTime             (second) {
+    let add0 = (num) => (num < 10 ? `0${num}` : String(num));
+    let hour = Math.floor(second / 3600);
+    let min  = Math.floor((second - hour * 3600) / 60);
+    let sec  = Math.floor(second - hour * 3600 - min * 60);
+    return [hour, min, sec].map(add0).join(':');
+  }
+  function clamp                    (num, a, b) {
+    return Math.max(Math.min(num, Math.max(a, b)), Math.min(a, b));
+  }
+
+  window.onkeydown        = function(ThisEvent){
+    if(ThisEvent.key       == "Escape"){
+      WaitingBackground.style.display = "none";
+      if(TheFetchController){
+        TheFetchController.abort();
+      }
+      if(TheReader){
+        TheReader.abort();
+      }
+    } else 
+    if(ThisEvent.key       == "Home"){        // CURRENTTIME 
+      let ThisNewTime;
+      if(IsCtrlKeyDown(ThisEvent)){
+        ThisNewTime         = 0; 
+      } else {
+        ThisNewTime         = ThisAudio.currentTime  - ( 0.5 * duration); 
+      }
+      ThisAudio.currentTime = ThisNewTime;
+      TheCurrentTime        = ThisAudio.currentTime;
+      beginTime             = CalcBeginTime ();
+      DrawNow();
+    } else 
+    if(ThisEvent.key       == "End"){
+      let ThisNewTime;
+      if(IsCtrlKeyDown(ThisEvent)){
+        ThisNewTime         = TotalDuration; 
+      } else {
+        ThisNewTime         = ThisAudio.currentTime  + ( 0.5 * duration); 
+      }
+      ThisAudio.currentTime = ThisNewTime;
+      TheCurrentTime        = ThisAudio.currentTime;
+      beginTime             = CalcBeginTime ();
+      DrawNow();
+      ;
+    } else 
+    if(ThisEvent.key       == "PageUp"){      // WAVESCALE
+      let ThisNewScale;
+      if(IsShiftKeyDown(ThisEvent)){
+        ThisNewScale        = 2.0; 
+      } else {
+        ThisNewScale        = waveScale + 0.1; 
+      }
+      SetWaveScaleLength      (ThisNewScale);
+    } else 
+    if(ThisEvent.key       == "PageDown"){
+      let ThisNewScale;
+      if(IsShiftKeyDown(ThisEvent)){
+        ThisNewScale        = 0.1; 
+      } else {
+        ThisNewScale        = waveScale - 0.1; 
+      }
+      SetWaveScaleLength      (ThisNewScale);
+    } else 
+    if(ThisEvent.key       == "ArrowUp"){     // ZOOM
+      let ThisZoom; 
+      if(IsShiftKeyDown(ThisEvent)){
+        ThisZoom            = MaxSampleDuration; 
+      } else
+      if(IsAltKeyDown(ThisEvent)){
+        ThisZoom            = duration  + 10; 
+      } else {
+        ThisZoom            = duration  + 2; 
+      }
+      SetZoomFactor(ThisZoom);
+    } else 
+    if(ThisEvent.key       == "ArrowDown"){
+      let ThisZoom; 
+      if(IsShiftKeyDown(ThisEvent)){
+        ThisZoom            = 10; 
+      } else
+      if(IsAltKeyDown(ThisEvent)){
+        ThisZoom            = duration  - 10; 
+      } else {
+        ThisZoom            = duration  - 2; 
+      }
+      SetZoomFactor(ThisZoom);
+    } else 
+    if(ThisEvent.key       == "ArrowLeft"){   // SampleLength
+      let ThisLength; 
+      if(IsCtrlKeyDown(ThisEvent)){
+        ThisLength          = 200; 
+      } else
+      if(IsAltKeyDown(ThisEvent)){
+        ThisLength          = SampleLength  - 100; 
+      } else {
+        ThisLength          = SampleLength  - 10; 
+      }
+      SetSampleSizeLength      (ThisLength);
+    } else 
+    if(ThisEvent.key       == "ArrowRight"){
+      let ThisLength; 
+      if(IsCtrlKeyDown(ThisEvent)){
+        ThisLength          = 100; 
+      } else
+      if(IsAltKeyDown(ThisEvent)){
+        ThisLength          = SampleLength  + 100; 
+      } else {
+        ThisLength          = SampleLength  + 10; 
+      }
+      SetSampleSizeLength      (ThisLength);
+    } else 
+    if(ThisEvent.key       == "+"){           // VOLUME
+      let ThisVolume        = ThisAudio.volume;
+      if(IsCtrlKeyDown(ThisEvent)){
+        ThisVolume          = 1.0; 
+      } else
+      if(IsAltKeyDown(ThisEvent)){
+        ThisVolume          = ThisVolume    + 0.1; 
+      } else {
+        ThisVolume          = ThisVolume    + 0.01; 
+      }
+      if(ThisVolume         > 1.0){
+        ThisVolume          = 1.0;
+      }
+      ThisAudio.volume      = ThisVolume;
+    } else 
+    if(ThisEvent.key       == "-"){
+      let ThisVolume        = ThisAudio.volume;
+      if(IsCtrlKeyDown(ThisEvent)){
+        ThisVolume          = 0.0; 
+      } else
+      if(IsAltKeyDown(ThisEvent)){
+        ThisVolume          = ThisVolume    - 0.1; 
+      } else {
+        ThisVolume          = ThisVolume    - 0.01; 
+      }
+      if(ThisVolume         < 0.0){
+        ThisVolume          = 0.0;
+      }
+      ThisAudio.volume      = ThisVolume;
+    } else 
+    if(ThisEvent.key       == "Pause"){       // (Break KEY) PAUSE/UNPAUSE DRAW
+      TogglePauseDraw     ();
+    } else 
+    if(ThisEvent.key       == "*"){           // MAXSAMPLEDURATION
+      let ThisValue         = MaxSampleDuration;
+      if(IsCtrlKeyDown(ThisEvent)){
+        ThisValue           = 99; 
+      } else
+      if(IsAltKeyDown(ThisEvent)){
+        ThisValue          += 10; 
+      } else {
+        ThisValue          += 1; 
+      }
+      SetSampleMaxLength      (ThisValue);
+    } else 
+    if(ThisEvent.key       == "/"){
+      let ThisValue         = MaxSampleDuration;
+      if(IsCtrlKeyDown(ThisEvent)){
+        ThisValue           = 30; 
+      } else
+      if(IsAltKeyDown(ThisEvent)){
+        ThisValue          -= 10; 
+      } else {
+        ThisValue          -= 1; 
+      }
+      SetSampleMaxLength      (ThisValue);
+    } else 
+    if(ThisEvent.key       == "?"){           // HELP
+      ToggleShowHelp();
+    } else 
+    if(ThisEvent.key       == "0"){
+      SetTrackNo(0);
+    } else 
+    if(ThisEvent.key       == "1"){
+      SetTrackNo(1);
+    } else 
+    if(ThisEvent.key       == "2"){
+      SetTrackNo(2);
+    } else 
+    if(ThisEvent.key       == "3"){
+      SetTrackNo(3);
+    } else 
+    if(ThisEvent.key       == "4"){
+      SetTrackNo(4);
+    } else 
+    if(ThisEvent.key       == "5"){
+      SetTrackNo(5);
+    } else 
+    if(ThisEvent.key       == "6"){
+      SetTrackNo(6);
+    } else 
+    if(ThisEvent.key       == "7"){
+      SetTrackNo(7);
+    } else 
+    if(ThisEvent.key       == "8"){
+      SetTrackNo(8);
+    } else 
+    if(ThisEvent.key       == "9"){
+      SetTrackNo(9);
+    // } else 
+    // if(ThisEvent.key       == "Insert"){
+    //   ;
+    // } else 
+    // if(ThisEvent.key       == "Delete"){
+    //   ;
+    // } else 
+    // if(ThisEvent.key       == "ScrollLock"){
+    //   ;
+    // } else 
+    // if(ThisEvent.key       == "Tab"){
+    //   ;
+    // } else 
+    // if(ThisEvent.key       == "Backspace"){
+    //   ;
+    // } else 
+    // if(ThisEvent.key       == "Enter"){
+    //   ;
+    // } else 
+    // if(ThisEvent.key       == "="){
+    //   ;
+    // } else 
+    // if(ThisEvent.key       == "!"){
+    //   ;
+    // } else 
+    // if(ThisEvent.key       == "NumLock"){
+    //   ;
+    } else 
+    if(ThisEvent.key       == "Alt"){
+    } else 
+    if(ThisEvent.key       == "Shift"){
+    } else 
+    if(ThisEvent.key       == "Control"){
+    } else 
+    if(ThisEvent.key       == "Meta"){ // Windows
+    } else 
+    if(ThisEvent.key       == " "){    // Space
+      if(ThisAudio.paused){
+        ThisAudio.play();
+      } else {
+        ThisAudio.pause();
+      }
+    } else 
+    if(ThisEvent.key       == ""){
+      ;
+    } else {
+      console.log(ThisEvent);
+      return;
+    }
+    ThisEvent.preventDefault(); 
+    ThisEvent.stopPropagation();
+    ThisEvent.stopImmediatePropagation();
+} 
+  var DrawNow             = DoNothing;
+  
+  
+  async function PlayFromAudio (){
+    if(!(ThisAudioContext)){
+      ThisAudioContext    = new (window.AudioContext || window.webkitAudioContext || window.mozAudioContext)();
+    }
+    if("http"            == ThisAudio.src.substr(0, 4)){
+      if(ThisAudio.error){
+        alert("Failed to open file: \n\n" + ThisAudio.error.message);
+        WaitingBackground.style.display = "none";
+        return;
+      }
+      let IsReady           = {"Status":false};
+      let ThisTitle         = ThisAudio.src;
+      GetHttpObjectArrayBuffer(ThisAudio.src, function (ThisArrayBuffer){
+        // console.log("ThisArrayBuffer", ThisArrayBuffer);
+        TheArrayBuffer      = ThisArrayBuffer;
+        ThisAudioContext.decodeAudioData(TheArrayBuffer, function (ThisAudioBuffer){
+          TheAudioBuffer     = ThisAudioBuffer;
+          // console.log("TheAudioBuffer", TheAudioBuffer);
+          TrackAvailable    = TheAudioBuffer.numberOfChannels;
+          if(CurrentTrackNo >= TrackAvailable){
+            CurrentTrackNo  = TrackAvailable - 1;
+          }
+          ThisChannelData   = TheAudioBuffer.getChannelData(CurrentTrackNo);
+          SetTrackNo(CurrentTrackNo);
+          // console.log("ThisChannelData", ThisChannelData);        
+          // Start();
+          IsReady.Status = true;
+        });      
+      });
+      GetHttpObjectUrl(ThisAudio.src, function (ThisBlobURL){
+        // console.log(ThisBlobURL);
+        ThisAudio.src        = ThisBlobURL;
+          let ThisInterval              = setInterval (function (){
+            if(IsReady.Status){
+              clearInterval(ThisInterval);
+              Start();
+              SetVideoInputTitle(ThisTitle);
+            }
+          }, 125);
+      });
+    } else 
+    if("blob"            == ThisAudio.src.substr(0, 4)){
+      Start();
+    } else 
+    if("file"            == document.baseURI.substr(0, 4)){
+      alert("Can't analyse in local file mode.\nYou need to select the file with the browse button.");
+      // ALWAYS CORS: AND REFUSE TO GIVE DATA
+      WaitingBackground.style.display = "none";
+    } else {
+      alert("Unknown or unsupported File type.");
+      WaitingBackground.style.display = "none";
+    }
+     
+    async function Start(){
+      // console.log("Analyser Started");
+      if(animationFrameID){
+        cancelAnimationFrame(animationFrameID); animationFrameID = null;
+      }
+      // INIT DRAW
+      TheAnalyser         = ThisAudioContext.createAnalyser();
+      TheAudioSrc         = ThisAudioContext.createMediaElementSource(ThisAudio);
+      TheAudioSrc.connect(TheAnalyser);
+      TheAnalyser.connect(ThisAudioContext.destination);
+ 
+      sampleRate          = ThisAudioContext.sampleRate;
+      TheCurrentTime      = ThisAudio.currentTime;
+      let ThisTimeout     = 10000;
+      while(isNaN(ThisAudio.duration)){
+        await Sleep(125);
+        ThisTimeout      -= 125;
+        if(ThisTimeout   <= 0){
+          alert("No Duration found from the video.");
+          break;
+        }
+      }
+      TotalDuration       = ThisAudio.duration;
+      CursorPos           = (width   / 2); // ONLY IN SCROLABLE
+      MiddleHeight        = (height  / 2);
+
+      TheFrequencyData    = new Uint8Array(TheAnalyser.frequencyBinCount);
+      var TheSpectrum     = document.getElementById('Spectrum'),
+        SpectrumCtx       = TheSpectrum.getContext('2d'),
+        SpectrumWidth     = TheSpectrum.width,
+        SpectrumHeight    = TheSpectrum.height - 2,
+        BandWidth         = 10, 
+        BandWidthGap      = 2, 
+        MeterCount        = 800 / (10 + 2), 
+        BandGrad          = SpectrumCtx.createLinearGradient(0, 0, 0, 300);
+        BandGrad.addColorStop(1,   '#0f0');
+        BandGrad.addColorStop(0.5, '#ff0');
+        BandGrad.addColorStop(0,   '#f00');
+      
+      function DrawSpectrum (){
+        TheAnalyser.getByteFrequencyData(TheFrequencyData);
+
+        var FreqStep      = Math.round(TheFrequencyData.length / MeterCount); 
+        SpectrumCtx.clearRect(0, 0, SpectrumWidth, SpectrumHeight);
+        for(let Indx = 0; Indx < MeterCount; Indx++) {
+          let ThisX       = Indx * 12;
+          let ThisFreq    = TheFrequencyData[Indx * FreqStep];
+          SpectrumCtx.fillStyle = BandGrad; 
+          SpectrumCtx.fillRect(ThisX, SpectrumHeight - ThisFreq, BandWidth, SpectrumHeight); 
+        }
+      }
+      WaitingBackground.style.display = "none";
+
+      ProcessCanvasZoom     (duration);
+      function Draw         (){
+        ScrollX         = CalcScrollX();
+        if(PauseDraw){
+          return;
+        }
+        DrawBackground    ();
+        DrawGrid          ();
+        DrawRuler         ();
+        DrawWave          ();
+        DrawCursor        ();
+        DrawScrollbar     ();
+        DrawSpectrum      ();
+
+      }
+      Draw ();
+      DrawNow             = function (){
+        if(!(animationFrameID)){
+          Draw();
+        }
+      }
+      
+      function DrawBackground () {
+        ctx.clearRect(0, 0,   width, height);
+        ctx.fillStyle       = backgroundColor;
+        ctx.fillRect(0, 0,    width, height);
+        ctx.fillStyle       = paddingColor;
+        ctx.fillRect(0, 0,    CenterPlot, height);
+        ctx.fillRect(width  - CenterPlot, 0, CenterPlot, height);
+      }
+      function DrawGrid       () {
+        ctx.fillStyle       = gridColor;
+        let ThisCurrentTime = (TheCurrentTime - parseInt(TheCurrentTime, 10)) * GridScale;
+        for(let index       = 0; index < gridNum + 10; index += density) {
+          let x = (scrollable)? gridGap * index - ThisCurrentTime : gridGap * index;
+          ctx.fillRect(x, 0, pixelRatio, height);
+        }
+        for(let index = 0; index < GridArea; index += density){
+          ctx.fillRect(0, gridGap * index, width, pixelRatio);
+        }
+      }
+      function DrawRuler      () {
+        ctx.fillStyle       = rulerColor;
+        let second          = -1;
+        let ThisCurrentTime = (TheCurrentTime - parseInt(TheCurrentTime, 10)) * GridScale;
+
+        // NEVER CALCULATE IN A DRAWING LOOP IF YOU CAN AVOID
+        // AND OBVIOUSLY DON'T CALCULATE IT TWICE
+        // EXCEPTION -+ THOSE COST 1CC ONLY THE SAME AS AN IF
+        // WHY IS IT IMPORTANT? BECAUSE I INTEND TO DO MUCH MORE THAN JUST THAT
+        for(let index = 0; index < gridNum + 10; index += 1) {
+          if(((index - TrackPadding) % 10) === 0) {
+            let x = scrollable? (gridGap * index - ThisCurrentTime) : (gridGap * index);
+            second         += 1;
+            ctx.fillRect(
+              x,
+              rulerAtTop ? 0 : (height - FullFontHeight),
+              pixelRatio,
+              FullFontHeight
+            );
+            let time      = Math.floor(beginTime + second);
+            if(((time % density) === 0) && (time >= 0)){
+              ctx.fillText(
+                secondToTime(time), 
+                (x - RelativeTextX + pixelRatio),
+                rulerAtTop ? (RelativeTextY) : (height - RelativeTextY + fontSize)
+              );
+            }
+          } else 
+          if((index - TrackPadding) % 5 === 0){
+            let x = scrollable? (gridGap * index - ThisCurrentTime) : (gridGap * index);
+            ctx.fillRect(
+              x,
+              rulerAtTop ? 0 : height - HalfFontHeight,
+              pixelRatio,
+              HalfFontHeight
+            );
+          }
+        }
+      }
+      function DrawWave       () {
+        if(!(ThisChannelData)){ return; }
+        let startIndex    = Math.floor(beginTime * sampleRate);
+        let endIndex      = Math.floor(clamp((beginTime + duration) * sampleRate, startIndex, Infinity));
+        let step          = Math.floor((endIndex - startIndex) / WaveWidth);
+        let stepIndex     = 0;
+        let xIndex        = 0;
+        let min           = 1;
+        let max           = -1;
+
+        // NEVER CALCULATE IN A DRAWING LOOP IF YOU CAN AVOID
+        // AND OBVIOUSLY DON'T CALCULATE IT TWICE
+        // EXCEPTION -+ THOSE COST 1CC ONLY THE SAME AS A IF
+        // WHY IS IT IMPORTANT? BECAUSE I INTEND TO DO MUCH MORE THAN JUST THAT
+        for(let Indx      = startIndex; Indx < endIndex; Indx += waveSize) {
+          stepIndex      += 1;
+          let item        = ThisChannelData[Indx] || 0;
+          if(item         < min){ 
+            min           = item; 
+          } else 
+          if(item         > max){ 
+            max           = item; 
+          }
+          let WaveY       = ((1 + min * waveScale) * MiddleHeight);
+          let WaveH       = Math.max(1, (max - min) * MiddleHeight * waveScale);
+          if((stepIndex  >= step) && (xIndex < WaveWidth)) {
+            let waveX     = GridSpace + xIndex;
+            if(waveBorder) {
+              ctx.strokeStyle = waveBorderColor; // Set the border color
+              ctx.lineWidth   = waveBorderWidth; // Set the border width
+              // Draw the border around the rectangle
+              ctx.strokeRect(
+                waveX,
+                WaveY,
+                waveSize,
+                WaveH
+              );
+            }
+            // Fill the rectangle with the desired color
+            ctx.fillStyle = (progress && ScrollX >= waveX ? progressColor : waveColor);
+            ctx.fillRect(
+              (waveX      + (waveBorder ? waveBorderWidth / 2 : 0)),
+              (WaveY      + (waveBorder ? waveBorderWidth / 2 : 0)),
+              (waveSize   - (waveBorder ? waveBorderWidth : 0)), 
+              (WaveH      - (waveBorder ? waveBorderWidth : 0)) 
+              // Adjust the height for the border
+            );
+            xIndex       += waveSize;
+            stepIndex     = 0;
+            min           = 1;
+            max           = -1;
+          }
+        }
+      }
+      function DrawCursor     () {
+        ctx.fillStyle     = cursorColor;
+        ctx.globalAlpha   = 0.25;
+        ctx.fillRect(ScrollX - pixelRatio, 0, pixelRatio, height);
+        ctx.globalAlpha   = 0.5; // WE DON'T WANT TO HIDE THE WAVE 100%
+        ctx.fillRect(ScrollX    , 0, pixelRatio, height);
+        ctx.globalAlpha   = 0.25;
+        ctx.fillRect(ScrollX + pixelRatio, 0, pixelRatio, height);
+        ctx.globalAlpha   = 1;
+      }
+      function DrawScrollbar  () {
+        if(!TotalDuration || TotalDuration === Infinity) return;
+        ScrollbarLeft     = (scrollable?0:(TheCurrentTime / TotalDuration) * (width - ScrollbarWidth));
+        ctx.fillStyle     = scrollbarColor;
+        ctx.fillRect(ScrollbarLeft, ScrollbarTop, ScrollbarWidth, ScrollbarHeight);
+      }
+      function RenderFrame    () {
+        animationFrameID      = requestAnimationFrame(RenderFrame);
+        // RESULT: 60 FRAMES/SEC. TOO FAST AND IT'S A WASTE HERE MAKING IT AT 30FPS
+        let CheckTime         = new Date();
+        let ThisDiffTime      = ((CheckTime - LastTimeStamp) / 1000); 
+        if((ThisDiffTime     >= FPS30)){    // IF IT'S GOOD ENOUGH FOR MOVIES...
+          LastTimeStamp       = new Date(); // DON'T WASTE MY COMPUTER RESOURCES.
+          FrameCounter++;
+        } else {
+          FrameDropped++;
+          return;
+        }
+        Draw ();
+      }
+
+      var ThePreviousTime;
+      var TheSampleTimeout;
+      function PlaySample(){
+        if(!(EnableSamplePlay)){
+          return;
+        }
+        if(SamplePlaying){
+          clearTimeout(TheSampleTimeout); TheSampleTimeout = null;
+        }
+        if(duration               > MaxSampleDuration){
+          return;
+        }
+        if((animationFrameID)){
+          return;
+        }
+        function PlayThisSample (){
+          ThePreviousTime         = ThisAudio.currentTime;
+          SamplePlaying           = true;
+          TheSampleTimeout        = setTimeout(function (){
+            if(TheSampleTimeout){
+              ThisAudio.pause();
+              ThisAudio.currentTime = ThePreviousTime;
+            }
+            SamplePlaying         = false;
+          }, SampleLength);
+          ThisAudio.play();
+        }
+        PlayThisSample ();
+      }
+
+      // FUNCTION & EVENT REGARDING THE TRACK VIEW
+      ThisCanvas.onwheel        = function (ThisEvent){
+        var ThisDirection       = Math.sign(ThisEvent.deltaY);
+        if(IsShiftKeyDown(ThisEvent)){
+          let ThisZoom; 
+          if(IsCtrlKeyDown(ThisEvent)){
+            ThisZoom            = duration  + (10 * ThisDirection); 
+          } else {
+            ThisZoom            = duration  + (2 * ThisDirection); 
+          }
+          SetZoomFactor(ThisZoom);
+        } else {
+          let ThisNewPos; 
+          if(IsAltKeyDown(ThisEvent)){
+            ThisNewPos            = TheCurrentTime  + (5 * ThisDirection); 
+          } else {
+            ThisNewPos            = TheCurrentTime  + (0.5 * ThisDirection); 
+          }
+          if((ThisNewPos         <= TotalDuration)){
+            ThisAudio.currentTime = ThisNewPos;
+            TheCurrentTime        = ThisAudio.currentTime;
+            beginTime             = CalcBeginTime ();
+          }
+        }
+      }
+      ThisCanvas.onmouseenter   = function (ThisEvent){
+        WaveCursor.style.display= "";
+      }
+      ThisCanvas.onmouseleave   = function (ThisEvent){
+        WaveCursor.style.display= 'none';
+        Waveform.style.cursor   = "";
+        IsGrabed                = false;
+      }
+      ThisCanvas.onmousemove    = function (ThisEvent){
+        if(IsGrabed){ // By the pussy
+          Waveform.style.cursor = "grab";
+          if(SamplePlaying){
+            return;
+          }
+          let diffWidth         = ThisEvent.pageX - LastPageX;
+          let diffTime          = (diffWidth / ((PixRatio) * 10)); 
+
+          ThisAudio.currentTime = LastCurrentTime + (scrollable ? -diffTime : diffTime);
+          TheCurrentTime        = ThisAudio.currentTime;
+          beginTime             = CalcBeginTime ();
+
+          PlaySample();
+        } else {
+          // THAT WAS WRONG LIKE MANY OTHER THING. COULDN'T PUT ANYTHING BESIDE.
+          let ThisboundingRect  = TrackView.getBoundingClientRect();
+          let ThisX             = ThisEvent.pageX; //  + ThisboundingRect.left;
+          WaveCursor.style.left = ThisX + 'px';
+
+          let ThisLeftButtonDown= (ThisEvent.buttons || ThisEvent.button) & 1;
+          if(ThisLeftButtonDown){
+            // console.log("Grabing started.");
+            LastPageX           = ThisEvent.pageX;
+            LastCurrentTime     = TheCurrentTime;
+            IsGrabed            = true;
+          }
+        }
+      }
+      ThisCanvas.onmouseup      = function (ThisEvent){
+        Waveform.style.cursor   = "";
+      }
+      ThisCanvas.onclick        = function (ThisEvent){
+        if(!(IsGrabed)){
+          let ThisMarker        = GetCanvasPos(ThisEvent);
+          let ThisTime          = CalcCursorTime(ThisMarker.X);
+          ThisAudio.currentTime = ThisTime;
+          TheCurrentTime        = ThisAudio.currentTime;
+          beginTime             = CalcBeginTime ();
+          PlaySample();
+        }
+        IsGrabed                = false;
+        Waveform.style.cursor   = "";
+      }
+      // FUNCTION & EVENT RELATIVE TO VIDEO
+      function OnWheel            (ThisEvent){
+        let ThisDirection       = (ThisEvent.deltaY < 0) ? -1 : 1; // Math.sign(ThisEvent.deltaY);
+        let ThisNewTime;
+        if(IsShiftKeyDown(ThisEvent)){
+          if(IsCtrlKeyDown(ThisEvent)){
+            ThisNewTime         = ThisAudio.currentTime  + (0.5  * ThisDirection); 
+          } else {
+            ThisNewTime         = ThisAudio.currentTime  + (0.05 * ThisDirection); 
+          }
+          ThisAudio.currentTime = ThisNewTime;
+          TheCurrentTime        = ThisAudio.currentTime;
+          beginTime             = CalcBeginTime ();
+          PlaySample();
+
+        } else {
+          let ThisVolume        = ThisAudio.volume  + (0.05 * ThisDirection); 
+
+          if(ThisVolume         < 0){ThisVolume     = 0;}
+          if(ThisVolume         > 1){ThisVolume     = 1;}
+          ThisAudio.volume      = ThisVolume;
+        }
+      }
+      ThisAudio.onwheel         = OnWheel;
+
+      function OnSeeked           (ThisEvent){
+        if(!(animationFrameID)){
+          TheCurrentTime          = ThisAudio.currentTime;
+          TotalDuration           = ThisAudio.duration;
+          beginTime               = CalcBeginTime ();
+          Draw ();
+        }
+      }
+      ThisAudio.onseeked        = OnSeeked;
+      function OnTimeUpdate       (ThisEvent){
+        if(SamplePlaying){
+          return;
+        }
+        TheCurrentTime          = ThisAudio.currentTime;
+        TotalDuration           = ThisAudio.duration;
+        beginTime               = CalcBeginTime ();
+        // console.log("VidTime:", TheCurrentTime);
+      }
+      ThisAudio.ontimeupdate    = OnTimeUpdate;
+      function OnPlay (){
+        if(SamplePlaying){
+          return;
+        }
+        TheCurrentTime          = ThisAudio.currentTime;
+        TotalDuration           = ThisAudio.duration;
+        beginTime               = CalcBeginTime ();
+        // console.log("Playing Rendering", SamplePlaying);
+        RenderFrame();
+      }
+      function OnStop (){
+        if(animationFrameID){
+          // console.log("Rendering Stopped.");
+          cancelAnimationFrame(animationFrameID); animationFrameID = null;
+        }
+      }
+      ThisAudio.onplay          = OnPlay;
+      ThisAudio.onpause         = OnStop;
+      ThisAudio.onended         = OnStop;
+    }
+  }
+
+  // MISC LIB
+  function IsNull                 (ThisValue)          { return ((ThisValue === undefined) || (ThisValue === null) );} // || (isNaN(ThisValue))
+  function IsNotNull              (ThisValue)          { return ((ThisValue !== undefined) && (ThisValue !== null) );} // && (isNaN(ThisValue) == false)
+  function IsReallyNull           (ThisValue)          { return ((ThisValue === undefined) || (ThisValue === null) || (isNaN(ThisValue) === false));}
+  function IsReallyNotNull        (ThisValue)          { return ((ThisValue !== undefined) && (ThisValue !== null) && (isNaN(ThisValue) !== true));}
+
+  function IsFalse                (ThisValue)          { return ((ThisValue === undefined) || (ThisValue === null) || (ThisValue === false));}
+  function IsTrue                 (ThisValue)          { return ((ThisValue !== undefined) && (ThisValue !== null) && (ThisValue === true));}
+
+  function IsStringNull           (ThisValue)          { return ((ThisValue === undefined) || (ThisValue === null) || (ThisValue === ""));}
+  function IsStringNotNull        (ThisValue)          { return ((ThisValue !== undefined) && (ThisValue !== null) && (ThisValue !== ""));}
+  function IsNullString           (ThisValue)          { return ((ThisValue === undefined) || (ThisValue === null) || (ThisValue === ""));}
+  function IsNotNullString        (ThisValue)          { return ((ThisValue !== undefined) && (ThisValue !== null) && (ThisValue !== ""));}
+
+  function IsCtrlKeyDown          (ThisEvent)          { return ( !!(ThisEvent.ctrlKey)  ); }
+  function IsShiftKeyDown         (ThisEvent)          { return ( !!(ThisEvent.shiftKey) ); }
+  function IsAltKeyDown           (ThisEvent)          { return ( !!(ThisEvent.altKey)   );}
+  window.onclick                = function (){
+    window.onclick              = null; 
+    WaitingText.innerHTML = "Processing file...<br>Press Esc to cancel.";
+    PlayFromAudio ();
+  }
+  </script>
+</body>
+</html>
