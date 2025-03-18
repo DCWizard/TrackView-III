@@ -21,7 +21,13 @@ Yeah, I'm talking to you WonderShare for example. I've been asking you for that 
 
 <img src="https://github.com/DCWizard/TrackView-III/raw/refs/heads/main/img/TrackView%20III.webp">
 
+Here is the final and fully fubctional Video Editor: 
+Try it here: https://thinknspeak.net/tools/#CVirtualVideoEditor
 
+
+<a href="https://thinknspeak.net/tools/#CVirtualVideoEditor" >
+<img src="https://github.com/DCWizard/TrackView-III/raw/refs/heads/main/img/Vitual%20Video%20Editor.webp">
+</a>
 
 To see, to use... ect.
 
