@@ -25,7 +25,7 @@ Here is the final and fully fubctional Video Editor:
 Try it here: https://thinknspeak.net/tools/#CVirtualVideoEditor
 
 
-<a href="https://thinknspeak.net/tools/#CVirtualVideoEditor" >
+<a href="https://thinknspeak.net/whats-a-virtual-video-editor-and-why-should-you-care/" >
 <img src="https://github.com/DCWizard/TrackView-III/raw/refs/heads/main/img/Vitual%20Video%20Editor.webp">
 </a>
 
